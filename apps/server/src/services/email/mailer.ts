@@ -1,5 +1,6 @@
 import dns from "node:dns";
 import nodemailer from "nodemailer";
+import type SMTPTransport from "nodemailer/lib/smtp-transport/index.js";
 import { env } from "../../config/env.js";
 import { logger } from "../../utils/logger.js";
 
@@ -17,16 +18,25 @@ function getTransporter(): nodemailer.Transporter {
     throw new Error("SMTP is not configured. Set SMTP_USER and SMTP_PASS in environment.");
   }
   if (!transporter) {
-    transporter = nodemailer.createTransport({
+    const smtpOptions = {
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
       secure: env.SMTP_PORT === 465,
-      family: 4,
       auth: {
         user: env.SMTP_USER!,
         pass: env.SMTP_PASS!.replace(/\s/g, ""),
       },
-    });
+      // Force IPv4 — Render has no IPv6 egress to Gmail (ENETUNREACH on AAAA).
+      lookup: (
+        hostname: string,
+        _options: dns.LookupOptions,
+        callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void
+      ) => {
+        dns.lookup(hostname, { family: 4 }, callback);
+      },
+    } as SMTPTransport.Options;
+
+    transporter = nodemailer.createTransport(smtpOptions);
   }
   return transporter;
 }
