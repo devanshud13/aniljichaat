@@ -63,7 +63,7 @@ The repo includes [`render.yaml`](./render.yaml). In Render:
 |--------|--------|
 | **Root Directory** | `apps/server` |
 | **Runtime** | Node |
-| **Build Command** | `cd ../.. && corepack enable && corepack prepare pnpm@9.15.0 --activate && pnpm install && pnpm --filter @anilji/shared build && pnpm --filter @anilji/database build && pnpm --filter @anilji/server build` |
+| **Build Command** | `cd ../.. && corepack enable && corepack prepare pnpm@9.15.0 --activate && NODE_ENV=development pnpm install && pnpm --filter @anilji/shared build && pnpm --filter @anilji/database build && pnpm --filter @anilji/server build` |
 | **Start Command** | `node dist/index.js` |
 | **Health Check Path** | `/health` |
 
@@ -221,6 +221,16 @@ After Vercel gives you a URL (e.g. `https://anil-ji-chaat.vercel.app`):
 - Admin → **Settings** → toggle ON.
 - Order must have `customerEmail` and status **Completed**.
 - `SMTP_USER` / `SMTP_PASS` set on Render (Gmail App Password, not normal password).
+
+### Build fails on Render: `tsconfig.base.json` not found
+
+Render sets `NODE_ENV=production`, so `pnpm install` skips **devDependencies** (`typescript`, `@anilji/config`). Prefix install with:
+
+```bash
+NODE_ENV=development pnpm install
+```
+
+(or `pnpm install --prod=false`). See [`render.yaml`](./render.yaml).
 
 ### Build fails on Vercel (pnpm / workspace)
 
