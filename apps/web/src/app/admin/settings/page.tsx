@@ -48,7 +48,9 @@ export default function AdminSettingsPage() {
             <h2 className="font-serif text-lg font-bold text-[#2a1810]">Customer thank-you emails</h2>
             <p className="mt-2 text-sm leading-relaxed text-[#5c4a3a]">
               When an order is marked <strong>Completed</strong>, send a branded email with invoice to
-              the customer if they entered an email at checkout.
+              the customer if they entered an email at checkout. On Render <strong>free</strong> tier use{" "}
+              <strong>Resend</strong> (<code className="text-xs">RESEND_API_KEY</code>,{" "}
+              <code className="text-xs">RESEND_FROM</code>) — Gmail SMTP is blocked there.
             </p>
 
             {settings === null ? (

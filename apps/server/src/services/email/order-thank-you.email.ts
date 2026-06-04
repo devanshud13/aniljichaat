@@ -1,7 +1,7 @@
 import { env } from "../../config/env.js";
 import { logger } from "../../utils/logger.js";
 import { getAppSettings } from "../settings.service.js";
-import { isSmtpConfigured, sendMail } from "./mailer.js";
+import { isEmailConfigured, sendMail } from "./mailer.js";
 export interface OrderEmailPayload {
   _id: string;
   orderType: string;
@@ -176,8 +176,10 @@ export async function sendOrderThankYouEmail(order: OrderEmailPayload): Promise<
   const email = order.customerEmail?.trim().toLowerCase();
   if (!email) return false;
 
-  if (!isSmtpConfigured()) {
-    logger.warn("Thank-you email skipped: SMTP_USER / SMTP_PASS not configured");
+  if (!isEmailConfigured()) {
+    logger.warn(
+      "Thank-you email skipped: set RESEND_API_KEY + RESEND_FROM (Render free) or SMTP_USER + SMTP_PASS"
+    );
     return false;
   }
 

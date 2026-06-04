@@ -89,11 +89,13 @@ The repo includes `[render.yaml](./render.yaml)`. In Render:
 | `RAZORPAY_KEY_ID`         | If using payments |                                                                                  |
 | `RAZORPAY_KEY_SECRET`     | If using payments |                                                                                  |
 | `RAZORPAY_WEBHOOK_SECRET` | If using webhooks | From Razorpay dashboard                                                          |
-| `SMTP_HOST`               | Optional          | `smtp.gmail.com`                                                                 |
-| `SMTP_PORT`               | Optional          | `587`                                                                            |
-| `SMTP_USER`               | Optional          | Gmail address                                                                    |
-| `SMTP_PASS`               | Optional          | [Google App Password](https://myaccount.google.com/apppasswords)                 |
-| `SMTP_FROM_NAME`          | Optional          | `Anil Ji Chaat`                                                                  |
+| `RESEND_API_KEY`          | **Recommended on Render free** | From [resend.com](https://resend.com) — uses HTTPS (port 443), not blocked |
+| `RESEND_FROM`             | With Resend       | `Anil Ji Chaat <noreply@yourdomain.com>` (domain must be verified in Resend) |
+| `SMTP_HOST`               | Local / paid Render | `smtp.gmail.com` — **blocked on Render free tier** (ports 25, 465, 587)      |
+| `SMTP_PORT`               | With SMTP         | `587`                                                                            |
+| `SMTP_USER`               | With SMTP         | Gmail address                                                                    |
+| `SMTP_PASS`               | With SMTP         | [Google App Password](https://myaccount.google.com/apppasswords)                 |
+| `SMTP_FROM_NAME`          | With SMTP         | `Anil Ji Chaat`                                                                  |
 | `COOKIE_DOMAIN`           | Usually empty     | Leave blank when using Vercel `/api-proxy` (same-site cookies on Vercel domain)  |
 | `SEED_ADMIN_USERNAME`     | First deploy only | `admin`                                                                          |
 | `SEED_ADMIN_PASSWORD`     | First deploy only | Strong password                                                                  |
@@ -228,12 +230,23 @@ After Vercel gives you a URL (e.g. `https://anil-ji-chaat.vercel.app`):
 - `NEXT_PUBLIC_SOCKET_URL` must be the Render API origin (same as `NEXT_PUBLIC_API_URL`).
 - `CORS_ORIGINS` must include the Vercel site URL.
 
-### Thank-you emails not sent
+### Thank-you emails: `Connection timeout` on Render
+
+**Render free tier blocks outbound SMTP** (ports 25, 465, 587). Gmail SMTP will always time out there — this is not a bug in your code.
+
+**Fix (free tier):** use [Resend](https://resend.com) over HTTPS:
+
+1. Create API key → set `RESEND_API_KEY` on Render.
+2. Verify your domain → set `RESEND_FROM` e.g. `Anil Ji Chaat <noreply@yourdomain.com>`.
+3. Redeploy. Resend is tried before SMTP when both are set.
+
+**Alternative:** upgrade Render to a **paid** instance — then Gmail `SMTP_USER` / `SMTP_PASS` works.
+
+### Thank-you emails not sent (general)
 
 - Admin → **Settings** → toggle ON.
 - Order must have `customerEmail` and status **Completed**.
-- `SMTP_USER` / `SMTP_PASS` set on Render (Gmail App Password, not normal password).
-- Log shows `ENETUNREACH` + IPv6 (`2607:f8b0:...`): Render has no IPv6 egress to Gmail — the server forces IPv4 for SMTP (`family: 4` in mailer). Redeploy after pulling latest server code.
+- Either `RESEND_API_KEY` + `RESEND_FROM` **or** `SMTP_USER` + `SMTP_PASS` configured.
 
 ### Build fails on Vercel (pnpm / workspace)
 

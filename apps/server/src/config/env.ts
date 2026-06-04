@@ -23,6 +23,9 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM_NAME: z.string().default("Anil Ji Chaat"),
+  /** HTTPS email API — required on Render free tier (SMTP ports blocked). https://resend.com */
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM: z.string().optional(),
   SEED_ADMIN_USERNAME: z.string().default("admin"),
   SEED_ADMIN_PASSWORD: z.string().default("Admin@123"),
 });

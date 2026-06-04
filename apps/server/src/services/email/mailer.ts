@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport/index.js";
 import { env } from "../../config/env.js";
 import { logger } from "../../utils/logger.js";
+import { isResendConfigured, sendViaResend } from "./resend.js";
 
 // Render and many hosts have no working IPv6 egress; Gmail SMTP often resolves to AAAA first.
 dns.setDefaultResultOrder("ipv4first");
@@ -11,6 +12,11 @@ let transporter: nodemailer.Transporter | null = null;
 
 export function isSmtpConfigured(): boolean {
   return Boolean(env.SMTP_USER && env.SMTP_PASS);
+}
+
+/** True when Resend (HTTPS) or Gmail SMTP is configured. */
+export function isEmailConfigured(): boolean {
+  return isResendConfigured() || isSmtpConfigured();
 }
 
 function getTransporter(): nodemailer.Transporter {
@@ -26,7 +32,9 @@ function getTransporter(): nodemailer.Transporter {
         user: env.SMTP_USER!,
         pass: env.SMTP_PASS!.replace(/\s/g, ""),
       },
-      // Force IPv4 — Render has no IPv6 egress to Gmail (ENETUNREACH on AAAA).
+      connectionTimeout: 30_000,
+      greetingTimeout: 30_000,
+      socketTimeout: 30_000,
       lookup: (
         hostname: string,
         _options: dns.LookupOptions,
@@ -41,7 +49,7 @@ function getTransporter(): nodemailer.Transporter {
   return transporter;
 }
 
-export async function sendMail(options: {
+async function sendViaSmtp(options: {
   to: string;
   subject: string;
   html: string;
@@ -56,5 +64,27 @@ export async function sendMail(options: {
     html: options.html,
     text: options.text,
   });
-  logger.info("Email sent", { to: options.to, subject: options.subject });
+}
+
+export async function sendMail(options: {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}): Promise<void> {
+  if (!isEmailConfigured()) {
+    throw new Error(
+      "Email is not configured. Set RESEND_API_KEY + RESEND_FROM (Render free tier) or SMTP_USER + SMTP_PASS."
+    );
+  }
+
+  // Resend uses HTTPS (port 443) — works on Render free tier; SMTP ports 25/465/587 are blocked there.
+  if (isResendConfigured()) {
+    await sendViaResend(options);
+    logger.info("Email sent via Resend", { to: options.to, subject: options.subject });
+    return;
+  }
+
+  await sendViaSmtp(options);
+  logger.info("Email sent via SMTP", { to: options.to, subject: options.subject });
 }
