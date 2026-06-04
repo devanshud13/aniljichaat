@@ -5,7 +5,8 @@ services:
     plan: free
     # NODE_ENV=production skips devDeps; TypeScript + @anilji/config are required to compile workspace packages
     buildCommand: cd ../.. && NODE_ENV=development npx pnpm install && npx pnpm --filter @anilji/shared build && npx pnpm --filter @anilji/database build && npx pnpm --filter @anilji/server build
-    startCommand: cd apps/server && node dist/index.js
+    # rootDir is already apps/server — do not cd into apps/server again
+    startCommand: node dist/index.js
     rootDir: apps/server
     healthCheckPath: /health
     envVars:
