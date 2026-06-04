@@ -1,0 +1,16 @@
+{
+  "name": "anil-ji-chaat",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm run --parallel dev",
+    "dev:web": "pnpm --filter @anilji/web dev",
+    "dev:server": "pnpm --filter @anilji/server dev",
+    "build": "pnpm run -r build",
+    "seed": "pnpm --filter @anilji/server seed",
+    "lint": "pnpm run -r lint"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

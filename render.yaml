@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: anilji-chaat-api
+    runtime: node
+    plan: free
+    buildCommand: cd ../.. && npx pnpm install && npx pnpm --filter @anilji/shared build && npx pnpm --filter @anilji/database build && npx pnpm --filter @anilji/server build
+    startCommand: cd apps/server && node dist/index.js
+    rootDir: apps/server
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SITE_URL
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
