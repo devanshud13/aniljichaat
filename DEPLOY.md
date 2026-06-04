@@ -149,7 +149,7 @@ If the default install fails, override in **Project Settings → General**:
 | `NEXT_PUBLIC_SOCKET_URL`            | Yes         | Same as API URL                                             |
 | `NEXT_PUBLIC_SITE_URL`              | Yes         | `https://your-app.vercel.app`                               |
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID`       | If payments | `rzp_live_...`                                              |
-| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | If uploads  | k                                                           |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | If uploads  |                                                             |
 
 
 Redeploy after changing env vars.
@@ -233,26 +233,7 @@ After Vercel gives you a URL (e.g. `https://anil-ji-chaat.vercel.app`):
 - Admin → **Settings** → toggle ON.
 - Order must have `customerEmail` and status **Completed**.
 - `SMTP_USER` / `SMTP_PASS` set on Render (Gmail App Password, not normal password).
-
-### Start fails: `cd: apps/server: No such file or directory`
-
-**Root Directory** is already `apps/server`, so the start command must be:
-
-```bash
-node dist/index.js
-```
-
-Not `cd apps/server && node dist/index.js`.
-
-### Build fails on Render: `tsconfig.base.json` not found
-
-Render sets `NODE_ENV=production`, so `pnpm install` skips **devDependencies** (`typescript`, `@anilji/config`). Prefix install with:
-
-```bash
-NODE_ENV=development pnpm install
-```
-
-(or `pnpm install --prod=false`). See `[render.yaml](./render.yaml)`.
+- Log shows `ENETUNREACH` + IPv6 (`2607:f8b0:...`): Render has no IPv6 egress to Gmail — the server forces IPv4 for SMTP (`family: 4` in mailer). Redeploy after pulling latest server code.
 
 ### Build fails on Vercel (pnpm / workspace)
 
