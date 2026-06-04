@@ -164,13 +164,27 @@ export async function listOrders(user: TokenPayload, outletId?: string, status?:
   }
   if (status) filter.status = status;
   const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(100);
-  const result = await Promise.all(
-    orders.map(async (o) => {
-      const items = await OrderItem.find({ orderId: o._id });
-      return { ...o.toObject(), items };
-    })
-  );
-  return result;
+  if (orders.length === 0) return [];
+
+  const orderIds = orders.map((o) => o._id);
+  const allItems = await OrderItem.find({ orderId: { $in: orderIds } });
+  const itemsByOrderId = new Map<string, { nameSnapshot: string; quantity: number; priceSnapshot: number }[]>();
+  for (const item of allItems) {
+    const key = item.orderId.toString();
+    const row = {
+      nameSnapshot: item.nameSnapshot,
+      quantity: item.quantity,
+      priceSnapshot: item.priceSnapshot,
+    };
+    const list = itemsByOrderId.get(key);
+    if (list) list.push(row);
+    else itemsByOrderId.set(key, [row]);
+  }
+
+  return orders.map((o) => ({
+    ...o.toObject(),
+    items: itemsByOrderId.get(o._id.toString()) ?? [],
+  }));
 }
 
 export async function updateOrderStatus(

@@ -42,9 +42,15 @@ export default function AdminMenuPage() {
         ))}
       </div>
 
-      {tab === "master" && <MasterMenuTab />}
-      {tab === "sheets" && <MenuSheetsTab />}
-      {tab === "outlets" && <OutletMenuTab />}
+      <div className={tab === "master" ? "" : "hidden"}>
+        <MasterMenuTab />
+      </div>
+      <div className={tab === "sheets" ? "" : "hidden"}>
+        <MenuSheetsTab />
+      </div>
+      <div className={tab === "outlets" ? "" : "hidden"}>
+        <OutletMenuTab />
+      </div>
     </AdminShell>
   );
 }

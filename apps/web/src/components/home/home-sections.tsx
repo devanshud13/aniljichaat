@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { optimizedImageUrl } from "@/lib/image-url";
 import {
   UtensilsCrossed,
   Tag,
@@ -50,10 +52,12 @@ export function HomeSections({ items, offers, content }: HomeSectionsProps) {
             >
               <div className="relative overflow-hidden">
                 {item.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={item.imageUrl}
+                  <Image
+                    src={optimizedImageUrl(item.imageUrl, 480)}
                     alt={item.name}
+                    width={480}
+                    height={208}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (

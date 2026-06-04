@@ -1,29 +1,29 @@
 "use client";
 
 import { useOrders, orderLabel } from "@/hooks/use-orders";
+import { useOrderStatusMutation } from "@/hooks/use-order-mutations";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { apiAuth } from "@/lib/api";
 import { OrderStatus } from "@anilji/shared";
 
 export default function AdminKitchenPage() {
-  const { data: orders = [], refetch } = useOrders();
+  const { data: orders = [], isLoading } = useOrders();
+  const statusMutation = useOrderStatusMutation();
   const kitchenStatuses: string[] = [OrderStatus.NEW, OrderStatus.PREPARING, OrderStatus.READY];
   const active = orders.filter((o) => kitchenStatuses.includes(o.status));
 
-  async function updateStatus(id: string, status: OrderStatus) {
-    await apiAuth(`/orders/${id}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ status }),
-    });
-    refetch();
+  function updateStatus(id: string, status: OrderStatus) {
+    statusMutation.mutate({ orderId: id, status });
   }
 
   return (
     <AdminShell title="Kitchen — Active Orders">
       <div className="space-y-4">
-        {active.length === 0 && (
+        {isLoading && orders.length === 0 && (
+          <p className="text-[#5c4a3a]">Loading orders…</p>
+        )}
+        {!isLoading && active.length === 0 && (
           <p className="text-[#5c4a3a]">No active orders in the kitchen queue.</p>
         )}
         {active.map((order) => (
@@ -41,12 +41,22 @@ export default function AdminKitchenPage() {
               </ul>
               <div className="mt-4 flex gap-2">
                 {order.status === OrderStatus.NEW && (
-                  <Button onClick={() => updateStatus(order._id, OrderStatus.PREPARING)}>
+                  <Button
+                    disabled={
+                      statusMutation.isPending && statusMutation.variables?.orderId === order._id
+                    }
+                    onClick={() => updateStatus(order._id, OrderStatus.PREPARING)}
+                  >
                     Start Preparing
                   </Button>
                 )}
                 {order.status === OrderStatus.PREPARING && (
-                  <Button onClick={() => updateStatus(order._id, OrderStatus.READY)}>
+                  <Button
+                    disabled={
+                      statusMutation.isPending && statusMutation.variables?.orderId === order._id
+                    }
+                    onClick={() => updateStatus(order._id, OrderStatus.READY)}
+                  >
                     Mark Ready
                   </Button>
                 )}

@@ -59,7 +59,7 @@ router.patch(
         id,
         req.body.status
       );
-      await logAudit(req, {
+      void logAudit(req, {
         userId: req.user!.userId,
         action: "ORDER_STATUS_CHANGE",
         entityType: "Order",
@@ -86,7 +86,7 @@ router.patch(
         id,
         req.body.paymentStatus
       );
-      await logAudit(req, {
+      void logAudit(req, {
         userId: req.user!.userId,
         action: "PAYMENT_UPDATE",
         entityType: "Order",

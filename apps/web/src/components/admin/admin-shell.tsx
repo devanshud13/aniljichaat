@@ -25,7 +25,8 @@ import {
 import { Permission, Role } from "@anilji/shared";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { apiAuth } from "@/lib/api";
-import { canAccessAdminPath, userHasPermission, type AuthUser } from "@/lib/permissions";
+import { useAuthUser } from "@/hooks/use-auth";
+import { canAccessAdminPath, userHasPermission } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -50,26 +51,24 @@ export function AdminShell({ title, children }: { title: string; children: React
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const { data: user, isError, isLoading } = useAuthUser();
 
   useEffect(() => {
-    apiAuth<AuthUser>("/auth/me").then((res) => {
-      if (!res.success || !res.data) {
-        router.push("/login");
-        return;
-      }
-      setUser(res.data);
-      if (!canAccessAdminPath(res.data, pathname)) {
-        const fallback =
-          res.data.role === Role.KITCHEN
-            ? "/admin/kitchen"
-            : res.data.role === Role.MANAGER
-              ? "/admin/manager"
-              : "/admin";
-        router.replace(fallback);
-      }
-    });
-  }, [pathname, router]);
+    if (isLoading) return;
+    if (isError || !user) {
+      router.push("/login");
+      return;
+    }
+    if (!canAccessAdminPath(user, pathname)) {
+      const fallback =
+        user.role === Role.KITCHEN
+          ? "/admin/kitchen"
+          : user.role === Role.MANAGER
+            ? "/admin/manager"
+            : "/admin";
+      router.replace(fallback);
+    }
+  }, [pathname, router, user, isError, isLoading]);
 
   async function logout() {
     await apiAuth("/auth/logout", { method: "POST" });
@@ -79,7 +78,7 @@ export function AdminShell({ title, children }: { title: string; children: React
   const visibleNav = navItems.filter((item) => {
     if ("adminOnly" in item && item.adminOnly && user?.role !== Role.ADMIN) return false;
     if (!item.permission) return true;
-    return userHasPermission(user, item.permission as typeof Permission.MENU);
+    return userHasPermission(user ?? null, item.permission as typeof Permission.MENU);
   });
 
   return (
@@ -115,6 +114,7 @@ export function AdminShell({ title, children }: { title: string; children: React
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch
                 onClick={() => setOpen(false)}
                 className={cn(
                   "flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors",
